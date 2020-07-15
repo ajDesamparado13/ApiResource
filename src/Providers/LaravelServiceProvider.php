@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Freedom\ApiResource\Contracts\JsonResourceInterface;
 use Freedom\ApiResource\Middleware\ParseResourceRequest;
 
-class ResponseServiceProvider extends ServiceProvider
+class LaravelServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
