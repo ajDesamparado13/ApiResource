@@ -6,10 +6,10 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Freedom\ApiResourceContracts\ApiResourceInterface;
-use Freedom\ApiResourceContracts\JsonResourceInterface;
-use Freedom\ApiResourceContracts\MetaProviderInterface;
-use Freedom\ApiResourceExceptions\ApiControllerException;
+use Freedom\ApiResource\Contracts\ApiResourceInterface;
+use Freedom\ApiResource\Contracts\JsonResourceInterface;
+use Freedom\ApiResource\Contracts\MetaProviderInterface;
+use Freedom\ApiResource\Exceptions\ApiControllerException;
 use Illuminate\Database\Eloquent\Model;
 use \Prettus\Validator\Contracts\ValidatorInterface;
 use Illuminate\Http\Request;
@@ -31,7 +31,7 @@ abstract class ApiController extends BaseController
     /**
      * The resource instance.
      *
-     * @var Freedom\ApiResourceContracts\ApiInterface;
+     * @var Freedom\ApiResource\Contracts\ApiInterface;
      */
     protected $resource;
 
@@ -45,7 +45,7 @@ abstract class ApiController extends BaseController
     /**
      * The Transformer instance
      *
-     * @var \Freedom\ApiResourceVO\LangObject;
+     * @var \Freedom\ApiResource\VO\LangObject;
      */
     protected $messageObject;
 
@@ -62,7 +62,7 @@ abstract class ApiController extends BaseController
         $resource = app()->make($this->resource());
 
         if (!$resource instanceof ApiResourceInterface) {
-            throw new ApiControllerException("Class {$this->resource()} must be an instance of Freedom\ApiResourceContracts\ApiResourceInterface");
+            throw new ApiControllerException("Class {$this->resource()} must be an instance of Freedom\ApiResource\Contracts\ApiResourceInterface");
         }
 
         return $this->resource = $resource;
@@ -75,7 +75,7 @@ abstract class ApiController extends BaseController
         $transformer = app()->make($_class);
 
         if (!$transformer instanceof JsonResourceInterface) {
-            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResourceContracts\JsonResourceInterface");
+            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResource\Contracts\JsonResourceInterface");
         }
 
         return $this->transformer = $transformer;
@@ -94,8 +94,8 @@ abstract class ApiController extends BaseController
 
         $metaProvider = app()->make($_class);
 
-        if(!( $metaProvider instanceof  \Freedom\ApiResourceContracts\MetaProviderInterface )){
-            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResourceContracts\MetaProviderInterface ");
+        if(!( $metaProvider instanceof  \Freedom\ApiResource\Contracts\MetaProviderInterface )){
+            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResource\Contracts\MetaProviderInterface ");
         }
 
         return $this->metaProvider =$metaProvider;
