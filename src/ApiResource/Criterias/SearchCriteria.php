@@ -2,6 +2,7 @@
 
 namespace Freedom\ApiResource\Criterias;
 
+use Freedom\ApiResource\Parsers\RequestCriteriaParser;
 use Prettus\Repository\Contracts\CriteriaInterface;
 use Prettus\Repository\Contracts\RepositoryInterface;
 use Illuminate\Support\Arr;
@@ -37,7 +38,8 @@ abstract class  SearchCriteria implements CriteriaInterface
     }
 
     protected function makeSearchData(){
-        $search = request()->input('search',[]);
+        $input = request()->input('search',[]);
+        $search = RequestCriteriaParser::parseField($input,'search');
         $searchables = $this->searchables ? $this->searchables : $this->makeSearchables();
         return Arr::only($search,$searchables);
     }
