@@ -1,0 +1,15 @@
+{
+  "name": "freedom/api-resource",
+  "description": "Yet another package for building laravel api implementation",
+  "type": "library",
+  "require-dev": {
+    "prettus/l5-repository": "dev-master"
+  },
+  "authors": [
+    {
+      "name": "Allen Jay Desamparado",
+      "email": "ajDesamparado13@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev"
+}
