@@ -11,5 +11,17 @@
       "email": "ajDesamparado13@gmail.com"
     }
   ],
+  "autoload": {
+    "psr-4": {
+      "Freedom\\ApiResource\\": "src/ApiResource/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Freedom\\ApiResource\\Providers\\LaravelServiceProvider"
+      ]
+    }
+  },
   "minimum-stability": "dev"
 }
