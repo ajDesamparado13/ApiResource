@@ -170,7 +170,7 @@ abstract class ApiController extends BaseController
     {
         $transformer = $this->transformer;
         $per_page = $this->request->input('per_page',null);
-        return $this->resource->paginate(is_int($per_page) ? $per_page : null,$transformer->columns);
+        return $this->resource->paginate(is_numeric($per_page) ? (int)$per_page : null,$transformer->columns);
     }
 
     /*
