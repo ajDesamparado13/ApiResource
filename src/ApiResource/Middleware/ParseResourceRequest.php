@@ -2,7 +2,7 @@
 
 namespace Freedom\ApiResource\Middleware;
 
-use Freedom\ApiResourceParsers\RequestCriteriaParser;
+use Freedom\ApiResource\Parsers\RequestCriteriaParser;
 use Closure;
 
 class ParseResourceRequest

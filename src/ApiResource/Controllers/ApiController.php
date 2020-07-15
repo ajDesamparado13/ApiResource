@@ -13,7 +13,7 @@ use Freedom\ApiResource\Exceptions\ApiControllerException;
 use Illuminate\Database\Eloquent\Model;
 use \Prettus\Validator\Contracts\ValidatorInterface;
 use Illuminate\Http\Request;
-use App\Subsytem\Api\VO\ApiMessage;
+use Freedom\ApiResource\VO\ApiMessage;
 
 abstract class ApiController extends BaseController
 {
@@ -94,7 +94,7 @@ abstract class ApiController extends BaseController
 
         $metaProvider = app()->make($_class);
 
-        if(!( $metaProvider instanceof  \Freedom\ApiResource\Contracts\MetaProviderInterface )){
+        if(!( $metaProvider instanceof  MetaProviderInterface)){
             throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResource\Contracts\MetaProviderInterface ");
         }
 

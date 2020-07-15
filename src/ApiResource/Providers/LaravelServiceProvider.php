@@ -26,7 +26,18 @@ class LaravelServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->loadMiddlewares();
+        $this->loadResponseMacro();
+    }
+
+    protected function loadMiddlewares()
+    {
         $this->app['router']->aliasMiddleware('resource.parse-request',ParseResourceRequest::class);
+
+    }
+
+    protected function loadResponseMacro()
+    {
         Response::macro('resource',function($data,JsonResourceInterface $transformer, array $response=[]){
             $transformer->resource = $data;
             if( is_a($data,'Illuminate\Pagination\LengthAwarePaginator') || is_a($data,'Illuminate\Database\Eloquent\Collection')){
@@ -58,6 +69,7 @@ class LaravelServiceProvider extends ServiceProvider
                 'error'  => $response
             ], $status);
         });
+
     }
 
 
