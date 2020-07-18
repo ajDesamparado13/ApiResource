@@ -64,6 +64,11 @@ class RequestCriteriaParser
     }
 
     public static function parseField($value,$key){
+
+        if(!$value){
+            return [];
+        }
+
         if(is_array($value)){
             return $value;
         }
@@ -81,6 +86,10 @@ class RequestCriteriaParser
     */
     public static function parseSearchData(string $search)
     {
+        if(!$search){
+            return [];
+        }
+
         if(is_array($search)){
             return $search;
         }
