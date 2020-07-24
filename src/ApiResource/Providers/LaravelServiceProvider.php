@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\ServiceProvider;
 use Freedom\ApiResource\Contracts\JsonResourceInterface;
 use Freedom\ApiResource\Middleware\ParseResourceRequest;
+use Freedom\ApiResource\Resources\JsonResource;
 
 class LaravelServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,7 @@ class LaravelServiceProvider extends ServiceProvider
     {
         $this->loadMiddlewares();
         $this->loadResponseMacro();
+        $this->app->bind(JsonResourceInterface::class,JsonResource::class);
     }
 
     protected function loadMiddlewares()
