@@ -6,14 +6,14 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Freedom\ApiResource\Contracts\ApiResourceInterface;
 use Freedom\ApiResource\Contracts\JsonResourceInterface;
 use Freedom\ApiResource\Contracts\MetaProviderInterface;
 use Freedom\ApiResource\Exceptions\ApiControllerException;
-use Illuminate\Database\Eloquent\Model;
-use \Prettus\Validator\Contracts\ValidatorInterface;
-use Illuminate\Http\Request;
 use Freedom\ApiResource\VO\ApiMessage;
+use Prettus\Validator\Contracts\ValidatorInterface;
 
 abstract class ApiController extends BaseController
 {
@@ -298,7 +298,9 @@ abstract class ApiController extends BaseController
             return response()->json(['data' => 0, 'message' => 'No file uploaded'],201);
         }
         $result = $this->_upload($this->resource->find($this->request->input('id')));
-        return response()->json(['data' => $result, 'message' => $this->getMessage('upload')],200);
+        return response()->resource($result,$this->transformer,[
+            'message' => $this->getMessage('upload'),
+        ]);
     }
 
     /*
@@ -310,7 +312,10 @@ abstract class ApiController extends BaseController
     {
         $request = $this->request;
         $with = [];
-        $keys = array_filter(explode(';',$request->input('fileKey','file')));
+
+        $file_keys = $request->input('fileKey','file');
+        $keys = array_filter(is_array($file_keys) ? $file_keys : explode(',',$file_keys));
+
         foreach($keys as $key){
             if($request->hasFile($key)){
                 $this->resource->upload($request->file($key),$model,$key);
