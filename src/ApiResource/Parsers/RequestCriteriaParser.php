@@ -73,9 +73,15 @@ class RequestCriteriaParser
             return $value;
         }
 
-        if($key === 'search'){
-            return self::parseSearchData($value);
+        switch($key){
+            case 'orderBy':
+                return self::parseOrderByData($value);
+            break;
+            case 'search':
+                return self::parseSearchData($value);
+            break;
         }
+
         return array_filter(explode(';',$value));
     }
 
