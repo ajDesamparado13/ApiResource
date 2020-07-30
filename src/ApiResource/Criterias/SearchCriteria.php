@@ -20,11 +20,28 @@ abstract class  SearchCriteria implements CriteriaInterface
 
     protected $mapping;
 
+    protected $searchValues;
+
+    public function __construct(array $searchValues=[])
+    {
+        $this->setInput($searchValues);
+    }
+
+    public function setInput(array $searchValues){
+        $this->searchValues = $searchValues;
+    }
+
     public function setTable($table){
         $this->table = $table;
     }
 
-    protected function makeMapping(){
+    /*
+    * CREATE SEARCH DATA MAPPING  FROM Fields Searchable
+    * [ SEARCH_FIELD => DB_COLUMN ]
+    * IF NO DB_COLUMN IS SPECIFIED THEN FIELD IS USED
+    * @return array
+    */
+    protected function makeMapping() : array{
         $fields = $this->getFieldsSearchable();
         $mapping = [];
         foreach($fields as $field => $column){
@@ -33,18 +50,28 @@ abstract class  SearchCriteria implements CriteriaInterface
         return $this->mapping = $mapping;
     }
 
-    protected function makeSearchables(){
+    /*
+    * CREATE SEARCH FIELDS SEARCHABLES
+    * GET KEYS IN THE SEARCH DATA MAPPING
+    * @return array
+    */
+    protected function makeSearchables() : array {
        return $this->searchables = array_keys( $this->mapping ? $this->mapping : $this->makeMapping() );
     }
 
-    protected function makeSearchData(){
-        $input = request()->input('search',[]);
+    protected function makeSearchData() : array {
+        $input = count($this->searchValues) > 0 ? $this->searchValues : request()->input('search',[]);
         $search = RequestCriteriaParser::parseField($input,'search');
         $searchables = $this->searchables ? $this->searchables : $this->makeSearchables();
         return Arr::only($search,$searchables);
     }
 
-    protected function getColumn($field)
+    /*
+    * GET SEARCH FIELD RESPECTIVE DB_COLUMN
+    * TAKEN FROM THE MAPPING
+    * @return string
+    */
+    protected function getColumn($field) : string
     {
         $column = Arr::get($this->mapping,$field,$field);
 
@@ -59,6 +86,10 @@ abstract class  SearchCriteria implements CriteriaInterface
     }
 
 
+    /*
+    * BUILD THE SEARCH QUERY
+    * @return QueryBuilder
+    */
     public function handle($model)
     {
         $searches = $this->makeSearchData();
@@ -95,5 +126,9 @@ abstract class  SearchCriteria implements CriteriaInterface
     }
     
     abstract protected function specialQuery($query,$value,$field,$column);
+
+    /*
+    * GET THE FIELDS THAT ARE SEARCHABLE IN MODEL
+    */
     abstract public function getFieldsSearchable() : array;
 }
