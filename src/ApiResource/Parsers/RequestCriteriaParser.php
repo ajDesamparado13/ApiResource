@@ -54,7 +54,7 @@ class RequestCriteriaParser
     */
     public static function parseRequest(Request $request,$key = 'search')
     {
-        $fields = [ 'search','meta','filter','orderBy','sortedBy','with'];
+        $fields = [ 'search','meta','filter','orderBy','with'];
         $values = array_filter($request->only($fields));
 
         foreach($values as $key => $value){
@@ -79,12 +79,39 @@ class RequestCriteriaParser
         return array_filter(explode(';',$value));
     }
 
+    public static function parseOrderByData(string $orderBy) : array
+    {
+        if(!$orderBy){
+            return [];
+        }
+
+        if(is_array($orderBy)){
+            return $orderBy;
+        }
+
+        $orderByData = [];
+
+        if (stripos($orderBy, ':')) {
+            $fields = explode(';', $orderBy);
+
+            foreach ($fields as $row) {
+                try {
+                    list($field, $value) = explode(':', $row);
+                    $orderByData[$field] = stripos($value,',') ? explode(',',$value) : $value;
+                } catch (\Exception $e) {
+                    //Surround offset error
+                }
+            }
+        }
+        return $orderByData;
+    }
+
     /*
     * Parse $search string into an array splitted by colon (;) with $key : $value pair
     * @param string $search
     * @return array
     */
-    public static function parseSearchData(string $search)
+    public static function parseSearchData(string $search) : array
     {
         if(!$search){
             return [];
@@ -114,7 +141,6 @@ class RequestCriteriaParser
 
     /* TODO:
     * Parse Request fields
-    * Parse Request orderBy
     * Parse Request with
     * Parse request join
     * Parse Request filter
