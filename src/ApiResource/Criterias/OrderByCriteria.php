@@ -24,7 +24,7 @@ abstract class OrderByCriteria implements CriteriaInterface
         $this->orderBy = $orderBy;
     }
 
-    abstract protected function specialQuery($query,$orderBy);
+    abstract protected function specialQuery($query,$orderBy,$sortBy);
 
     abstract protected function defaultOrderBy($query);
 
