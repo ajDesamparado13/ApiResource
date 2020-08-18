@@ -132,7 +132,7 @@ abstract class ApiController extends BaseController
     */
     public function index()
     {
-        $is_paginated = $this->request->query(\Config::get('resource.request.type'),'paginated') != 'collection';
+        $is_paginated = $this->request->query(\Config::get('resource.type','resource-type'),'paginated') != 'collection';
         $result = $is_paginated ? $this->_indexPaginate() : $this->_indexCollection() ;
 
         $meta = [];
