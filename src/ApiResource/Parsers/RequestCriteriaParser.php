@@ -2,6 +2,7 @@
 
 namespace Freedom\ApiResource\Parsers;
 use \Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class RequestCriteriaParser
 {
@@ -55,7 +56,7 @@ class RequestCriteriaParser
     public static function parseRequest(Request $request,$key = 'search')
     {
         $fields = [ 'search','meta','filter','orderBy','with'];
-        $values = array_filter($request->only($fields));
+        $values = array_filter(Arr::only($request->query(),$fields));
 
         foreach($values as $key => $value){
             $values[$key] = self::parseField($value,$key);
