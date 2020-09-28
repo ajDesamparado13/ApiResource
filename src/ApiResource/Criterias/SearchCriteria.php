@@ -63,7 +63,7 @@ abstract class  SearchCriteria implements CriteriaInterface
         $input = count($this->searchValues) > 0 ? $this->searchValues : request()->input('search',[]);
         $search = RequestCriteriaParser::parseField($input,'search');
         $searchables = $this->searchables ? $this->searchables : $this->makeSearchables();
-        return Arr::only($search,$searchables);
+        return $this->searchValues = Arr::only($search,$searchables);
     }
 
     /*
@@ -92,9 +92,9 @@ abstract class  SearchCriteria implements CriteriaInterface
     */
     public function handle($model)
     {
-        $searches = $this->makeSearchData();
+        $this->makeSearchData();
 
-        foreach($searches as $field => $value){
+        foreach($this->searchValues as $field => $value){
             $column = $this->getColumn($field);
             $value = is_string($value) ? trim($value) : $value;
             $result = $this->specialQuery($model,$value,$field,$column);
