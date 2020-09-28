@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Criteria\Tenant;
+namespace Freedom\ApiResource\Traits;
 
 use Illuminate\Support\Str;
 
@@ -123,6 +123,12 @@ trait FullTextSearch
         ],"MATCH (?) AGAINST (? IN BOOLEAN MODE)");
     }
 
+    public function orderByRelevance($query,$name,$term,$columns,$order='desc',$operator='plus')
+    {
+        $query->addSelect(\DB::raw($this->relevanceSql($name,$term,$columns,$operator)));
+        return $query->orderBy($name,$order);
+    }
+
     public function relevanceSql($name, $term, $columns, $operator = 'plus')
     {
         $sql = str_replace('IN BOOLEAN MODE','',$this->fullTextSql($term,$columns,$operator));
@@ -143,8 +149,7 @@ trait FullTextSearch
 
     public function scopeOrderByRelevance($query,$name,$term,$columns,$order='desc',$operator='plus')
     {
-        $query->addSelect(\DB::raw($this->relevanceSql($name,$term,$columns,$operator)));
-        return $query->orderBy($name,$order);
+        return $this->orderByRelevance($query,$name,$term,$columns,$order,$operator);
     }
 
 }
