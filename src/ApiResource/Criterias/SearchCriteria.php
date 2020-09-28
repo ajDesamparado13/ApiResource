@@ -96,7 +96,7 @@ abstract class  SearchCriteria implements CriteriaInterface
 
         foreach($searches as $field => $value){
             $column = $this->getColumn($field);
-            $value = trim($value);
+            $value = is_string($value) ? trim($value) : $value;
             $result = $this->specialQuery($model,$value,$field,$column);
             $model = $result ? $result : $model->where($column,$value);
         }
