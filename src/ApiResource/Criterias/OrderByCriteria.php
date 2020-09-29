@@ -13,6 +13,7 @@ use Prettus\Repository\Contracts\RepositoryInterface;
 abstract class OrderByCriteria implements CriteriaInterface
 {
     protected $orderBy;
+    protected $skipOn=[];
 
     public function __construct($orderBy=['id' => 'desc'])
     {
@@ -24,29 +25,45 @@ abstract class OrderByCriteria implements CriteriaInterface
         $this->orderBy = $orderBy;
     }
 
-    abstract protected function specialQuery($query,$orderBy,$sortBy);
-
-    abstract protected function defaultOrderBy($query);
 
     public function handle($model){
 
         $request = request();
         $orderBy = $request->get('orderBy', null);
 
-        if (!isset($orderBy) && empty($orderBy)) {
+        if ($this->shouldSkipCriteria($orderBy)) {
             return $this->defaultOrderBy($model);
         }
 
+        return $this->newQuery($model,$orderBy);
+    }
+
+    protected function newQuery($model,$orderBy){
+        return $this->buildQuery($model,$orderBy);
+    }
+
+    protected function buildQuery($query,$orderBy){
         foreach($orderBy as $key => $value){
+            if($this->shouldSkipField($key,$value)){
+                continue;
+            }
 
             $column = is_string($key) ? $key : $value;
             $sortBy = is_string($key) ? $value : $this->defaultSortOperation();
 
-            $result = $this->specialQuery($model,$column,$sortBy);
-            $model = $result ? $result : $model->orderBy($column,$sortBy);
+            $result = $this->specialQuery($query,$column,$sortBy);
+            $query = $result ? $result : $query->orderBy($column,$sortBy);
         }
+        return $query;
+    }
 
-        return $model;
+    protected function shouldSkipCriteria($orderBy) : bool
+    {
+        return empty($orderBy);
+    }
+
+    protected function shouldSkipField($field,$value) : bool {
+        return in_array($field,$this->skipOn);
     }
 
     /**
@@ -66,4 +83,8 @@ abstract class OrderByCriteria implements CriteriaInterface
     {
         return 'desc';
     }
+
+    abstract protected function specialQuery($query,$orderBy,$sortBy);
+
+    abstract protected function defaultOrderBy($query);
 }
