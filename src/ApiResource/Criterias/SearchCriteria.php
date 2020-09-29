@@ -75,8 +75,8 @@ abstract class  SearchCriteria implements CriteriaInterface
                 continue;
             }
             $column = $searchables->getColumn($field,$this->table);
-            $result = $this->specialQuery($query,$value,$field,$column,$searchData);
-            $query = $result ? $result : $query->where($column,$value);
+            $result = $this->specialQuery($query,$value,$field,$column,$searchables);
+            $query = $result ?? $query->where($column,$value);
         }
         return $query;
     }
@@ -102,7 +102,7 @@ abstract class  SearchCriteria implements CriteriaInterface
         return $this->handle($model);
     }
     
-    abstract protected function specialQuery($query,$value,$field,$column,$searchData);
+    abstract protected function specialQuery($query,$value,$field,$column,SearchablesInterface $searchables);
 
     /*
     * GET THE FIELDS THAT ARE SEARCHABLE IN MODEL
