@@ -108,7 +108,7 @@ abstract class  SearchCriteria implements CriteriaInterface
 
     protected function shouldSkipField($field,$value) : bool
     {
-        return in_array($this->skipOn,$field);
+        return in_array($field,$this->skipOn);
     }
 
     protected function shouldSkipCriteria( array $searchData){
