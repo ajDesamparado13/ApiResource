@@ -72,7 +72,7 @@ abstract class  SearchCriteria implements CriteriaInterface
         return $this->buildQuery($model,$searchables,$searchData);
     }
 
-    protected function buildQuery($query,$searchables, $searchData){
+    protected function buildQuery($query,SearchablesInterface $searchables, array $searchData){
         foreach($searchData as $field => $value){
             $value = is_string($value) ? trim($value) : $value;
             if($this->shouldSkipField($field,$value)){
@@ -98,7 +98,7 @@ abstract class  SearchCriteria implements CriteriaInterface
         return $this->handle($model);
     }
     
-    abstract protected function specialQuery($query,$value,$field,$column, $searchables);
+    abstract protected function specialQuery($query,$value,$field,$column, SearchablesInterface $searchables);
 
     /*
     * GET THE FIELDS THAT ARE SEARCHABLE IN MODEL
