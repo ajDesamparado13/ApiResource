@@ -11,6 +11,8 @@ class GenericSearchables implements SearchablesInterface{
 
     protected $searchData;
 
+    protected $table;
+
     protected function requestKey()
     {
         return 'search';
@@ -22,6 +24,11 @@ class GenericSearchables implements SearchablesInterface{
         $this->searchData = $this->makeSearchData();
     }
 
+    public function setTable($table){
+        $this->table = $table;
+        return $this;
+    }
+
     public function getFieldsSearchable(){
         return [];
     }
@@ -29,11 +36,13 @@ class GenericSearchables implements SearchablesInterface{
     public function resetMapping()
     {
         $this->mapping = $this->makeMapping();
+        return $this;
     }
 
     public function resetSearchData()
     {
         $this->searchData = $this->makeSearchData();
+        return $this;
     }
 
     /*
@@ -60,10 +69,12 @@ class GenericSearchables implements SearchablesInterface{
 
     public function mergeSearchData(array $searchData){
         $this->searchData = array_merge($this->searchData, $searchData);
+        return $this;
     }
 
     public function mergeMapping(array $mapping){
         $this->mapping = array_merge($this->mapping,$this->makeMapping($mapping));
+        return $this;
     }
 
     public function getFieldKeys() : array {
@@ -78,28 +89,45 @@ class GenericSearchables implements SearchablesInterface{
         return Arr::only($input,$searchables);
     }
 
-    public function getFieldsMapping() : array {
+    public function getMapping() : array {
         return $this->mapping;
     }
 
     public function getFieldsLabel() : array
     {
-        return array_map(function($item,$index){
-            $key = is_numeric($index) ? $item : $index;
-            return !is_array($item) ? $key : Arr::get($item,'label',$key);
+        return array_map(function($item,$field){
+            return is_array($item) ?  Arr::get($item,'label',$item) : $item;
         },$this->mapping);
     }
 
     public function getFieldsColumn() : array
     {
-        return array_map(function($item,$index){
-            $key = is_numeric($index) ? $item : $index;
-            return !is_array($item) ? $key : Arr::get($item,'column',$key);
+        return array_map(function($item,$field){
+            return is_array($item) ?  Arr::get($item,'column',$item) : $item;
         },$this->mapping);
     }
 
-    public function getColumn(string $field){
-        return Arr::get($this->mapping,$field,$field);
+    public function getColumn(string $field, string $table=""){
+        $map = Arr::get($this->mapping,$field);
+        $table = empty($table) ? $this->table : $table;
+
+        if(!$map){
+            return null;
+        }
+
+        $column =  is_array($map) ? Arr::get($map,'column',$map) : $map;
+
+        if(empty($table)){
+            return $column;
+        }
+
+        if(is_array($column)){
+            return array_map(function($col) use($table){
+                return $table.'.'.$col;
+            },$column);
+        }
+
+        return $table.'.'.$column;
     }
 
     public function getValue(string $field){
