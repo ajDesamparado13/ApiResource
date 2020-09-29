@@ -65,13 +65,17 @@ abstract class  SearchCriteria implements CriteriaInterface
             return $model;
         }
 
+        return $this->newQuery($model,$searchables,$searchData);
+    }
+
+    protected function newQuery($model,SearchablesInterface $searchables, array $searchData){
         return $this->buildQuery($model,$searchables,$searchData);
     }
 
-    protected function buildQuery($query,$searchables,$searchData){
+    protected function buildQuery($query,$searchables, $searchData){
         foreach($searchData as $field => $value){
             $value = is_string($value) ? trim($value) : $value;
-            if($this->shouldSkip($field,$value)){
+            if($this->shouldSkipField($field,$value)){
                 continue;
             }
             $column = $searchables->getColumn($field,$this->table);
@@ -91,18 +95,10 @@ abstract class  SearchCriteria implements CriteriaInterface
      */
     public function apply($model, RepositoryInterface $repository)
     {
-        //$table = "";
-        //if(is_a($model,'Illuminate\Database\Query\JoinClause')){
-        //    $table = $model->table;
-        //}else if(is_a($model,'Illuminate\Database\Query\Builder')){
-        //    $table =  $model->from;
-        //}else{
-        //    $table = $model->getModel()->getTable();
-        //}
         return $this->handle($model);
     }
     
-    abstract protected function specialQuery($query,$value,$field,$column,SearchablesInterface $searchables);
+    abstract protected function specialQuery($query,$value,$field,$column, $searchables);
 
     /*
     * GET THE FIELDS THAT ARE SEARCHABLE IN MODEL
@@ -110,12 +106,12 @@ abstract class  SearchCriteria implements CriteriaInterface
     abstract public function getFieldsSearchable() : array;
 
 
-    protected function shouldSkip($field,$value) : bool
+    protected function shouldSkipField($field,$value) : bool
     {
         return in_array($this->skipOn,$field);
     }
 
-    protected function shouldSkipCriteria($searchData){
+    protected function shouldSkipCriteria( array $searchData){
         return count($searchData) <= 0;
     }
 }
