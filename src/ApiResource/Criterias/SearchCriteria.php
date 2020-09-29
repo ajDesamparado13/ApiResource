@@ -13,7 +13,7 @@ use Freedom\ApiResource\Contracts\SearchablesInterface;
  */
 abstract class  SearchCriteria implements CriteriaInterface
 {
-    protected $table;
+    protected $table="";
 
     protected $searchValues;
 
@@ -49,7 +49,7 @@ abstract class  SearchCriteria implements CriteriaInterface
     }
 
     public function setTable($table){
-        $this->table = $table;
+        $this->table = $table ?? "";
     }
 
     /*
@@ -61,16 +61,24 @@ abstract class  SearchCriteria implements CriteriaInterface
         $searchables = $this->makeSearchables();
         $searchData = $searchables->getSearchData($this->searchValues,$this->getFieldsSearchable());
 
+        if($this->shouldSkipCriteria($searchData)){
+            return $model;
+        }
+
+        return $this->buildQuery($model,$searchables,$searchData);
+    }
+
+    protected function buildQuery($query,$searchables,$searchData){
         foreach($searchData as $field => $value){
             $value = is_string($value) ? trim($value) : $value;
             if($this->shouldSkip($field,$value)){
                 continue;
             }
             $column = $searchables->getColumn($field,$this->table);
-            $result = $this->specialQuery($model,$value,$field,$column,$searchData);
-            $model = $result ? $result : $model->where($column,$value);
+            $result = $this->specialQuery($query,$value,$field,$column,$searchData);
+            $query = $result ? $result : $query->where($column,$value);
         }
-        return $model;
+        return $query;
     }
 
     /**
@@ -105,5 +113,9 @@ abstract class  SearchCriteria implements CriteriaInterface
     protected function shouldSkip($field,$value) : bool
     {
         return in_array($this->skipOn,$field);
+    }
+
+    protected function shouldSkipCriteria($searchData){
+        return count($searchData) <= 0;
     }
 }
