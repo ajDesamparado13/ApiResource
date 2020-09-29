@@ -118,7 +118,7 @@ trait FullTextSearch
     public function fullTextSql($term,$columns,$operator='plus')
     {
         return Str::replaceArray("?",[
-            $columns,
+            is_array($columns) ? implode(',',$columns) : $columns,
             $this->fullTextWildcards($term,$operator)
         ],"MATCH (?) AGAINST (? IN BOOLEAN MODE)");
     }
