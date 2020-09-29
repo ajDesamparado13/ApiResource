@@ -59,7 +59,7 @@ abstract class  SearchCriteria implements CriteriaInterface
     public function handle($model)
     {
         $searchables = $this->makeSearchables();
-        $searchData = $searchables->getSearchData($this->searchValues,$this->getFieldsSearchable());
+        $searchData = $searchables->getSearchData($this->searchValues);
 
         if($this->shouldSkipCriteria($searchData)){
             return $model;
