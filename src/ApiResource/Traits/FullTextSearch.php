@@ -14,20 +14,17 @@ trait FullTextSearch
      */
     protected function fullTextWildcards($term, $operator)
     {
-
-        $result = $term;
         switch(strtolower($operator))
         {
             case 'exact':
-                $result = $this->enclosed_in_quotes($term); break;
+                return  $this->exactSearch($term); break;
             case 'or': 
-                $result = $this->or_search($this->clearReservedSymbols($term));break;
+                return $this->orSearch($this->clearReservedSymbols($term));break;
             default:
-                $result = $this->default_search($this->clearReservedSymbols($term));break;
+                return $this->defaultSearch($this->clearReservedSymbols($term));break;
             break;
 
         }
-        return $result;
     }
 
     protected function clearReservedSymbols($term)
@@ -57,49 +54,59 @@ trait FullTextSearch
     }
 
 
-    protected function or_search($expression)
+    protected function orSearch($expression)
     {
         $expressions = array_filter(explode(',', $this->replaceCommaByte($expression)));
 
         return implode(' ', array_map(function($group){
-
             $terms = array_filter(explode(' ', $group));
-
-            $words = implode(' ' ,array_map(function($word){
-                return strlen($word) >= 3 ? $this->AND($word) : $word;
-            },$terms));
-
-            return $this->enclosed_in_parenthesis($words);
+            return $this->enclosed_in_parenthesis($this->makeAgainstWords($terms));
         },$expressions));
-
     }
 
-    protected function default_search($term)
+    protected function defaultSearch($term)
     {
         $words = array_filter(explode(' ', $term));
-
         if (count($words) == 1) {
-            return $this->enclosed_in_quotes($term);
+            return $this->enclosed_in_dquotes($term);
         }
+        return $this->makeAgainstWords($words);
+    }
 
-        return implode(' ', array_map(function($word,$key){
-            return strlen($word) >= 3 ? $this->AND($word) : $word;
-        },$words));
+    protected function makeAgainstWords(array $terms)
+    {
+        usort($terms,function($a,$b){
+            return strlen($b) <=> strlen($a);
+        });
+
+        return implode(' ' ,array_map(function($word){
+            return strlen($word) > 3 ? $this->AND($word) : $this->enclosed_in_quotes($word);
+        },$terms));
+    }
+
+    protected function exactSearch($term)
+    {
+        return $this->enclosed_in_dquotes($term);
     }
 
     protected function AND($word)
     {
-        return '+' . $this->enclosed_in_quotes($word);
+        return '+' . $this->enclosed_in_dquotes($word);
     }
 
     protected function OR($word)
     {
-        return '-' . $this->enclosed_in_quotes($word);
+        return '-' . $this->enclosed_in_dquotes($word);
+    }
+
+    protected function enclosed_in_dquotes($word)
+    {
+        return "'\\\"" . trim($word) . "\\\"'";
     }
 
     protected function enclosed_in_quotes($word)
     {
-        return "'\\\"" . trim($word) . "\\\"'";
+        return "'" . trim($word) . "'";
     }
 
     protected function enclosed_in_parenthesis($term)
