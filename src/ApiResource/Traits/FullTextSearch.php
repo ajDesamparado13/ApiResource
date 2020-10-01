@@ -14,7 +14,24 @@ trait FullTextSearch
      */
     protected function fullTextWildcards($term, $operator)
     {
-        $operator = strtolower($operator);
+
+        $result = $term;
+        switch(strtolower($operator))
+        {
+            case 'exact':
+                $result = $this->enclosed_in_quotes($term); break;
+            case 'or': 
+                $result = $this->or_search($this->clearReservedSymbols($term));break;
+            default:
+                $result = $this->default_search($this->clearReservedSymbols($term));break;
+            break;
+
+        }
+        return $result;
+    }
+
+    protected function clearReservedSymbols($term)
+    {
         // removing symbols used by MySQL
         $reservedSymbols = [
             '-',
@@ -36,78 +53,66 @@ trait FullTextSearch
             '　',
         ];
         #$reservedSymbols = ['-', '+', '<', '>', '@', '(', ')', '~','・','*','－'];
-
-        if ($operator == 'exact') {
-            return $this->exact_search(trim($term));
-        }
-
-        $term = trim(str_replace($reservedSymbols, ' ', $term));
-        if ($operator == 'or') {
-            return $this->or_search($term);
-        }
-
-
-        return $this->default_search($term);
+        return trim(str_replace($reservedSymbols, ' ', $term));
     }
 
-    private function exact_search($term)
+
+    protected function or_search($expression)
     {
-        return '"' . $term . '"';
-    }
+        $expressions = array_filter(explode(',', $this->replaceCommaByte($expression)));
 
-    private function or_search($expression)
-    {
-        //replace 2 byte comma character to 1 byte comma character
-        $expression = str_replace('，', ',', $expression);
-        $expression = str_replace('、', ',', $expression);
+        return implode(' ', array_map(function($group){
 
-        $expressions = explode(',', $expression);
-
-        $searchTerm = [];
-        foreach ($expressions as $group) {
             $terms = array_filter(explode(' ', $group));
-            $words = [];
-            foreach ($terms as $term) {
-                if (strlen($term) == 0) {
-                    continue;
-                }
-                /*
-                * applying + operator (required word) only big words
-                * because smaller ones are not indexed by mysql
-                */
-                if (strlen($term) >= 3) {
-                    $term = '+"' . $term . '"';
-                }
-                $words[] = $term;
-            }
-            $expr_string = "(".implode(' ',$words).")";
-            $searchTerm[] = $expr_string;
-        }
-        return implode(' ', $searchTerm);
+
+            $words = implode(' ' ,array_map(function($word){
+                return strlen($word) >= 3 ? $this->AND($word) : $word;
+            },$terms));
+
+            return $this->enclosed_in_parenthesis($words);
+        },$expressions));
+
     }
 
-    private function default_search($term)
+    protected function default_search($term)
     {
         $words = array_filter(explode(' ', $term));
+
         if (count($words) == 1) {
-            return '"' . $term . '"';
+            return $this->enclosed_in_quotes($term);
         }
 
-        foreach ($words as $key => $word) {
-            if (strlen($word) == 0) {
-                continue;
-            }
-            /*
-             * applying + operator (required word) only big words
-             * because smaller ones are not indexed by mysql
-             */
-            if (strlen($word) >= 3) {
-                $word = '+"' . $word . '"';
-            }
-            $words[$key] = $word;
-        }
+        return implode(' ', array_map(function($word,$key){
+            return strlen($word) >= 3 ? $this->AND($word) : $word;
+        },$words));
+    }
 
-        return implode(' ', $words);
+    protected function AND($word)
+    {
+        return '+' . $this->enclosed_in_quotes($word);
+    }
+
+    protected function OR($word)
+    {
+        return '-' . $this->enclosed_in_quotes($word);
+    }
+
+    protected function enclosed_in_quotes($word)
+    {
+        return "'\\\"" . trim($word) . "\\\"'";
+    }
+
+    protected function enclosed_in_parenthesis($term)
+    {
+        return "(" . $term . ")";
+    }
+
+    /*
+    * replace 2 byte comma character to 1 byte comma character
+    */
+    protected function replaceCommaByte($term)
+    {
+        return str_replace(['，','、'],',',$term);
     }
 
     public function fullText($query,$term,$columns,$operator='plus')
