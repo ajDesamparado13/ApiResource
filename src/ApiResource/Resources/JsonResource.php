@@ -12,13 +12,6 @@ class JsonResource extends BaseJsonResource implements JsonResourceInterface
     public $columns = ['*'];
 
     /**
-     * Collection of Criteria
-     *
-     * @var Collection
-     */
-    protected $criteria;
-
-    /**
      * Create a new resource instance.
      *
      * @param  mixed  $resource
@@ -27,9 +20,8 @@ class JsonResource extends BaseJsonResource implements JsonResourceInterface
     public function __construct($resource=null)
     {
         $this->resource = $resource;
-        $this->criteria = new Collection();
-
     }
+
     /**
      * Create new anonymous resource collection.
      *

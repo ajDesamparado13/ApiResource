@@ -2,40 +2,23 @@
 
 namespace Freedom\ApiResource\Criterias;
 
-use Prettus\Repository\Contracts\CriteriaInterface;
-use Prettus\Repository\Contracts\RepositoryInterface;
+use Illuminate\Support\Arr;
 
 /**
  * Class OrderByCriteria.
  *
  * @package namespace App\Criteria;
  */
-abstract class OrderByCriteria implements CriteriaInterface
+abstract class OrderByCriteria extends BaseResourceCriteria
 {
-    protected $orderBy;
-    protected $skipOn=[];
-
-    public function __construct($orderBy=['id' => 'desc'])
-    {
-        $this->setOrderBy($orderBy);
-    }
-
-    public function setOrderBy($orderBy)
-    {
-        $this->orderBy = $orderBy;
-    }
-
-
     public function handle($model){
+        $inputs = $this->makeInputs();
 
-        $request = request();
-        $orderBy = $request->get('orderBy', null);
-
-        if ($this->shouldSkipCriteria($orderBy)) {
-            return $this->defaultOrderBy($model);
+        if ($this->shouldSkipCriteria($inputs)) {
+            return $this->shouldOrderByDefault() ? $this->defaultOrderBy($model) : $model;
         }
 
-        return $this->newQuery($model,$orderBy);
+        return $this->newQuery($model,$inputs);
     }
 
     protected function newQuery($model,$orderBy){
@@ -57,26 +40,9 @@ abstract class OrderByCriteria implements CriteriaInterface
         return $query;
     }
 
-    protected function shouldSkipCriteria($orderBy) : bool
+    protected function shouldOrderByDefault() : bool
     {
-        return empty($orderBy);
-    }
-
-    protected function shouldSkipField($field,$value) : bool {
-        return in_array($field,$this->skipOn);
-    }
-
-    /**
-     * Apply criteria in query repository
-     *
-     * @param string              $model
-     * @param RepositoryInterface $repository
-     *
-     * @return mixed
-     */
-    public function apply($model, RepositoryInterface $repository)
-    {
-        return $this->handle($model);
+        return true;
     }
 
     protected function defaultSortOperation()
@@ -84,7 +50,14 @@ abstract class OrderByCriteria implements CriteriaInterface
         return 'desc';
     }
 
-    abstract protected function specialQuery($query,$orderBy,$sortBy);
+    protected function criteriaField(): string
+    {
+        return 'orderBy';
+    }
+
+    abstract protected function specialQuery($query,$orderByField,$sortBy);
 
     abstract protected function defaultOrderBy($query);
+
+    abstract public function getFields() : array;
 }

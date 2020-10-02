@@ -2,8 +2,6 @@
 
 namespace Freedom\ApiResource\Criterias;
 
-use Prettus\Repository\Contracts\CriteriaInterface;
-use Prettus\Repository\Contracts\RepositoryInterface;
 use Freedom\ApiResource\Contracts\SearchablesInterface;
 
 /**
@@ -11,20 +9,11 @@ use Freedom\ApiResource\Contracts\SearchablesInterface;
  *
  * @package namespace App\Criteria;
  */
-abstract class  SearchCriteria implements CriteriaInterface
+abstract class  SearchCriteria extends BaseResourceCriteria
 {
     protected $table="";
 
-    protected $searchValues;
-
-    protected $skipOn = [ ];
-
     protected $getFromSingleton=false;
-
-    public function __construct(array $searchValues=[])
-    {
-        $this->setInput($searchValues);
-    }
 
     public function searchables(){
         return \Freedom\ApiResource\Searchables\GenericSearchables::class;
@@ -39,13 +28,9 @@ abstract class  SearchCriteria implements CriteriaInterface
         $searchables = app()->makeWith($this->searchables(),['fieldsSearchables' => $this->getFieldsSearchable()]);
 
         if (!$searchables instanceof SearchablesInterface) {
-            throw new SearchablesInterface("Class {$this->searchables()} must be an instance of \Freedom\ApiResource\Contracts\SearchablesInterface");
+            throw new SearchablesInterface("Class {$this->searchables()} must be an instance of". SearchablesInterface::class);
         }
         return  $searchables;
-    }
-
-    public function setInput(array $searchValues){
-        $this->searchValues = $searchValues;
     }
 
     public function setTable($table){
@@ -59,7 +44,7 @@ abstract class  SearchCriteria implements CriteriaInterface
     public function handle($model)
     {
         $searchables = $this->makeSearchables();
-        $searchData = $searchables->getSearchData($this->searchValues);
+        $searchData = $searchables->getSearchData($this->inputs);
 
         if($this->shouldSkipCriteria($searchData)){
             return $model;
@@ -85,19 +70,6 @@ abstract class  SearchCriteria implements CriteriaInterface
         return $query;
     }
 
-    /**
-     * Apply criteria in query repository
-     *
-     * @param string              $model
-     * @param RepositoryInterface $repository
-     *
-     * @return mixed
-     */
-    public function apply($model, RepositoryInterface $repository)
-    {
-        return $this->handle($model);
-    }
-    
     abstract protected function specialQuery($query,$value,$field,$column, SearchablesInterface $searchables);
 
     /*
@@ -105,13 +77,4 @@ abstract class  SearchCriteria implements CriteriaInterface
     */
     abstract public function getFieldsSearchable() : array;
 
-
-    protected function shouldSkipField($field,$value) : bool
-    {
-        return in_array($field,$this->skipOn);
-    }
-
-    protected function shouldSkipCriteria( array $searchData){
-        return count($searchData) <= 0;
-    }
 }

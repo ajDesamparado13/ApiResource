@@ -8,16 +8,21 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Freedom\ApiResource\Contracts\ApiResourceInterface;
 use Freedom\ApiResource\Contracts\JsonResourceInterface;
-use Freedom\ApiResource\Contracts\MetaProviderInterface;
 use Freedom\ApiResource\Exceptions\ApiControllerException;
 use Freedom\ApiResource\VO\ApiMessage;
+use Freedom\Sanitizer\Traits\WithSanitizer;
 use Prettus\Validator\Contracts\ValidatorInterface;
 
 abstract class ApiController extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests;
+    use DispatchesJobs;
+    use ValidatesRequests;
+    use WithSanitizer;
+    use \Freedom\ApiResource\Traits\HasResource;
+    use \Freedom\ApiResource\Traits\HasTransformer;
+    use \Freedom\ApiResource\Traits\HasMetaProvider;
 
     /**
      * The prettus-validator instance.
@@ -26,21 +31,6 @@ abstract class ApiController extends BaseController
      */
     protected $validator = null;
 
-    protected $metaProvider;
-
-    /**
-     * The resource instance.
-     *
-     * @var Freedom\ApiResource\Contracts\ApiInterface;
-     */
-    protected $resource;
-
-    /**
-     * The Transformer instance
-     *
-     * @var \App\Http\Resources\Contracts\JsonResourceInterface;
-     */
-    protected $transformer;
 
     /**
      * The Transformer instance
@@ -58,47 +48,14 @@ abstract class ApiController extends BaseController
 
     abstract public function resource();
 
-    public function makeResource(){
-        $resource = app()->make($this->resource());
-
-        if (!$resource instanceof ApiResourceInterface) {
-            throw new ApiControllerException("Class {$this->resource()} must be an instance of Freedom\ApiResource\Contracts\ApiResourceInterface");
-        }
-
-        return $this->resource = $resource;
-    }
-
     abstract public function transformer();
-
-    public function makeTransformer(){
-        $_class = $this->transformer();
-        $transformer = app()->make($_class);
-
-        if (!$transformer instanceof JsonResourceInterface) {
-            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResource\Contracts\JsonResourceInterface");
-        }
-
-        return $this->transformer = $transformer;
-    }
 
     public function metaProvider(){
         return null;
     }
 
-    public function makeMetaProvider(){
-        $_class = $this->metaProvider();
-
-        if($_class === null){
-            return;
-        }
-
-        $metaProvider = app()->make($_class);
-
-        if(!( $metaProvider instanceof  MetaProviderInterface)){
-            throw new ApiControllerException("Class {$_class} must be an instance of Freedom\ApiResource\Contracts\MetaProviderInterface ");
-        }
-
-        return $this->metaProvider =$metaProvider;
+    public function sanitizer(){
+        return null;
     }
 
     public function __construct(Request $request)
@@ -106,6 +63,7 @@ abstract class ApiController extends BaseController
         $this->makeResource();
         $this->makeTransformer();
         $this->makeMetaProvider();
+        $this->makeSanitizer();
         $this->request = $request;
         $this->boot();
     }
@@ -135,10 +93,7 @@ abstract class ApiController extends BaseController
         $is_paginated = $this->request->query(\Config::get('resource.type','resource-type'),'paginated') != 'collection';
         $result = $is_paginated ? $this->_indexPaginate() : $this->_indexCollection() ;
 
-        $meta = [];
-        if($this->metaProvider){
-            $meta = array_merge($meta,$this->metaProvider->make($this->resource,$result));
-        }
+        $meta = $this->getMeta($this->resource,$result);
 
         return response()->resource($result,$this->transformer,[ 'message' => $this->getMessage('index'), 'meta' => $meta ]);
     }
@@ -194,6 +149,9 @@ abstract class ApiController extends BaseController
     protected function _store()
     {
         $inputs = $this->request->all();
+        if($this->hasSanitizer()){
+            $inputs = $this->sanitize($inputs);
+        }
         if ($this->validator) {
             $this->validator->with($inputs)->passesOrFail(ValidatorInterface::RULE_CREATE);
         }
@@ -256,6 +214,9 @@ abstract class ApiController extends BaseController
     protected function _update($id)
     {
         $inputs = $this->request->all();
+        if($this->hasSanitizer()){
+            $inputs = $this->sanitize($inputs);
+        }
         if ($this->validator) {
             $this->validator->with($inputs)->passesOrFail(ValidatorInterface::RULE_UPDATE);
         }
@@ -314,27 +275,17 @@ abstract class ApiController extends BaseController
         $with = [];
 
         $file_keys = $request->input('fileKey','file');
-        $keys = array_filter(is_array($file_keys) ? $file_keys : explode(',',$file_keys));
+        $keys = array_filter(is_array($file_keys) ? $file_keys : explode(',',$file_keys),function($key) use($request){
+            return !empty($key) && $request->hasFile($key);
+        });
 
         foreach($keys as $key){
-            if($request->hasFile($key)){
-                $this->resource->upload($request->file($key),$model,$key);
-                $with[] = $key;
-            }
+            $this->resource->upload($request->file($key),$model,$key);
+            $with[] = $key;
         };
         return count($with) > 0 ? $this->resource->with($with)->find($request->input('id')) : $model;
     }
 
-    /*
-    * Set the Controller and IoC binding for ResourceInterface
-    *
-    * @return void
-    */
-    protected function setTransformer(JsonResourceInterface $transformer)
-    {
-        app()->bind(JsonResourceInterface::class,$transformer);
-        $this->transformer = $transformer;
-    }
 
     /*
     * Set Controller's Validator for store and update methods
@@ -342,10 +293,11 @@ abstract class ApiController extends BaseController
     * @return void
     */
     protected function setValidator($validator){
-        $this->validator = is_string($validator) ? app()->make($validator) : $validator;
+        $validator = is_string($validator) ? app()->make($validator) : $validator;
         if (!$this->validator instanceof ValidatorInterface) {
-            throw new  ApiControllerException("Class {$validator} must be an instance of Prettus\\Validator\\Contracts\\ValidatorInterface");
+            throw new  ApiControllerException("Class {$validator} must be an instance of" . ValidatorInterface::class);
         }
+        return $this->validator = $validator;
     }
 
     /*
