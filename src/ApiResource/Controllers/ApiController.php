@@ -2,34 +2,22 @@
 
 namespace Freedom\ApiResource\Controllers;
 
-use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Freedom\ApiResource\Contracts\JsonResourceInterface;
-use Freedom\ApiResource\Exceptions\ApiControllerException;
 use Freedom\ApiResource\VO\ApiMessage;
-use Freedom\Sanitizer\Traits\WithSanitizer;
-use Prettus\Validator\Contracts\ValidatorInterface;
 
 abstract class ApiController extends BaseController
 {
-    use AuthorizesRequests;
-    use DispatchesJobs;
-    use ValidatesRequests;
-    use WithSanitizer;
+    use \Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+    use \Illuminate\Foundation\Bus\DispatchesJobs;
+    use \Illuminate\Foundation\Validation\ValidatesRequests;
+    use \Freedom\Sanitizer\Traits\WithSanitizer;
     use \Freedom\ApiResource\Traits\HasResource;
     use \Freedom\ApiResource\Traits\HasTransformer;
     use \Freedom\ApiResource\Traits\HasMetaProvider;
+    use \Freedom\ApiResource\Traits\hasValidator;
 
-    /**
-     * The prettus-validator instance.
-     *
-     * @var \Prettus\Validator\LaravelValidator;
-     */
-    protected $validator = null;
 
 
     /**
@@ -152,9 +140,11 @@ abstract class ApiController extends BaseController
         if($this->hasSanitizer()){
             $inputs = $this->sanitize($inputs);
         }
-        if ($this->validator) {
-            $this->validator->with($inputs)->passesOrFail(ValidatorInterface::RULE_CREATE);
+
+        if ($this->hasValidator()) {
+            $this->validate($inputs,'create');
         }
+
         return $this->resource->create($inputs);
     }
 
@@ -217,8 +207,8 @@ abstract class ApiController extends BaseController
         if($this->hasSanitizer()){
             $inputs = $this->sanitize($inputs);
         }
-        if ($this->validator) {
-            $this->validator->with($inputs)->passesOrFail(ValidatorInterface::RULE_UPDATE);
+        if ($this->hasValidator()) {
+            $this->validate($inputs,'update');
         }
         return $this->resource->update($inputs,$id);
     }
@@ -284,20 +274,6 @@ abstract class ApiController extends BaseController
             $with[] = $key;
         };
         return count($with) > 0 ? $this->resource->with($with)->find($request->input('id')) : $model;
-    }
-
-
-    /*
-    * Set Controller's Validator for store and update methods
-    *
-    * @return void
-    */
-    protected function setValidator($validator){
-        $validator = is_string($validator) ? app()->make($validator) : $validator;
-        if (!$this->validator instanceof ValidatorInterface) {
-            throw new  ApiControllerException("Class {$validator} must be an instance of" . ValidatorInterface::class);
-        }
-        return $this->validator = $validator;
     }
 
     /*
