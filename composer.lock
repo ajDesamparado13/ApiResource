@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fb22e32f752a695ae256c381c7fe2d4d",
+    "content-hash": "73efddd7f9cb70d4997b991cb605b2e6",
     "packages": [
         {
             "name": "brick/math",
@@ -128,6 +128,47 @@
                 "words"
             ],
             "time": "2020-06-16T06:15:13+00:00"
+        },
+        {
+            "name": "freedom/input-sanitizer",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ajDesamparado13/input-sanitizer.git",
+                "reference": "5df56932fffd4cd7928ab193d44d1b28d86df979"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ajDesamparado13/input-sanitizer/zipball/5df56932fffd4cd7928ab193d44d1b28d86df979",
+                "reference": "5df56932fffd4cd7928ab193d44d1b28d86df979",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/config": "~5.0|~6.0|~7.0",
+                "illuminate/contracts": "~5.0|~6.0|~7.0",
+                "illuminate/support": "~5.0|~6.0|~7.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Freedom\\Sanitizer\\Providers\\LaravelServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Freedom\\Sanitizer\\": "src/Sanitizer/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Allen Jay Desamparado",
+                    "email": "ajDesamparado13@gmail.com"
+                }
+            ],
+            "time": "2020-10-02T03:40:42+00:00"
         },
         {
             "name": "illuminate/auth",
@@ -3549,10 +3590,12 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "freedom/input-sanitizer": 20,
         "prettus/l5-repository": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }

@@ -15,7 +15,8 @@
     "illuminate/events": "~5.0|~6.0|~7.0",
     "illuminate/routing": "~5.0|~6.0|~7.0",
     "illuminate/auth": "~5.0|~6.0|~7.0",
-    "illuminate/contracts": "~5.0|~6.0|~7.0"
+    "illuminate/contracts": "~5.0|~6.0|~7.0",
+    "freedom/input-sanitizer": "dev-master"
   },
   "authors": [
     {
