@@ -12,7 +12,7 @@ abstract class BaseResourceCriteria implements CriteriaInterface
 
     protected $skipOn = [];
 
-    public function __construct(array $inputs)
+    public function __construct(array $inputs=[])
     {
         $this->inputs = $inputs;
     }
