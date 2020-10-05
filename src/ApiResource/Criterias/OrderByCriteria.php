@@ -26,16 +26,15 @@ abstract class OrderByCriteria extends BaseResourceCriteria
     }
 
     protected function buildQuery($query,$orderBy){
-        foreach($orderBy as $key => $value){
-            if($this->shouldSkipField($key,$value)){
+        $mapping = $this->makeMapping($this->getFields());
+        foreach($orderBy as $field => $value){
+            if($this->shouldSkipField($field,$value)){
                 continue;
             }
 
-            $column = is_string($key) ? $key : $value;
-            $sortBy = is_string($key) ? $value : $this->defaultSortOperation();
-
-            $result = $this->specialQuery($query,$column,$sortBy);
-            $query = $result ? $result : $query->orderBy($column,$sortBy);
+            $column = $mapping[$field];
+            $sortBy = $value ?? $this->defaultSortOperation();
+            $query = $this->specialQuery($query,$field,$column,$sortBy) ?? $query->orderBy($column,$sortBy);
         }
         return $query;
     }
@@ -50,12 +49,13 @@ abstract class OrderByCriteria extends BaseResourceCriteria
         return 'desc';
     }
 
-    protected function criteriaField(): string
+    public function getRequestField(): string
     {
         return 'orderBy';
     }
 
-    abstract protected function specialQuery($query,$orderByField,$sortBy);
+
+    abstract protected function specialQuery($query,$field,$column,$sortBy);
 
     abstract protected function defaultOrderBy($query);
 

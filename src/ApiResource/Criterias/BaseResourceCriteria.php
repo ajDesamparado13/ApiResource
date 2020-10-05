@@ -33,14 +33,23 @@ abstract class BaseResourceCriteria implements CriteriaInterface
         return $this->filterInputs(RequestCriteriaParser::parseField($input,$field));
     }
 
-    protected function filterInputs( array $inputs) : array {
-        $fields = $this->getFields();
-        if(Arr::first($fields) === '*'){
+    public function makeMapping(array $fields=[]) : array {
+        $mapping = [];
+        foreach($fields as $field => $value){
+            $key = !is_numeric($field) ? $field : ( is_array($value) ? Arr::get($value,'column',$field) : $value ) ;
+            $mapping[$key] = $value;
+        }
+        return $mapping;
+    }
+
+    protected function filterInputs( array $inputs ) : array {
+        $keys = $this->getKeys();
+        if(Arr::first($keys) === '*'){
             return $inputs;
         }
-        return Arr::where($inputs,function($value,$key) use ($fields){
+        return Arr::where($inputs,function($value,$key) use ($keys){
             $find = !is_numeric($key) ? $key : $value;
-            return in_array($find,$fields);
+            return in_array($find,$keys);
         });
     }
 
@@ -64,6 +73,13 @@ abstract class BaseResourceCriteria implements CriteriaInterface
 
     protected function shouldSkipCriteria( array $inputs){
         return empty($inputs);
+    }
+
+    public function getMapping() : array {
+        return $this->makeMapping($this->getFields());
+    }
+    public function getKeys() : array {
+        return array_keys($this->getMapping());
     }
 
     abstract public function getFields() : array;
