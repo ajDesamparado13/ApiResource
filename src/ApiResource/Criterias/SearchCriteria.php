@@ -25,7 +25,7 @@ abstract class  SearchCriteria extends BaseResourceCriteria
     * @return array
     */
     protected function makeSearchables(){
-        $searchables = app()->makeWith($this->searchables(),['fieldsSearchables' => $this->getFieldsSearchable()]);
+        $searchables = app()->makeWith($this->searchables(),['fieldsSearchables' => $this->getFields()]);
 
         if (!$searchables instanceof SearchablesInterface) {
             throw new SearchablesInterface("Class {$this->searchables()} must be an instance of". SearchablesInterface::class);
@@ -70,11 +70,16 @@ abstract class  SearchCriteria extends BaseResourceCriteria
         return $query;
     }
 
+    public function getRequestField() : string {
+        return 'search';
+    }
+
     abstract protected function specialQuery($query,$value,$field,$column, SearchablesInterface $searchables);
 
     /*
     * GET THE FIELDS THAT ARE SEARCHABLE IN MODEL
     */
-    abstract public function getFieldsSearchable() : array;
+    abstract public function getFields() : array;
+
 
 }
