@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Criteria\Tenant;
+namespace Freedom\ApiResource\Criterias;
 
 use Freedom\ApiResource\Criterias\BaseResourceCriteria;
 use Freedom\ApiResource\Exceptions\ResourceCriteriaException;
