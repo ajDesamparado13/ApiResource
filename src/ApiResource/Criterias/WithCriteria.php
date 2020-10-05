@@ -20,6 +20,7 @@ abstract class WithCriteria extends BaseResourceCriteria
         return $this->newQuery($model,$inputs);
     }
 
+
     protected function newQuery($model, array $inputs){
         return $this->buildQuery($model,$inputs);
     }
@@ -37,6 +38,11 @@ abstract class WithCriteria extends BaseResourceCriteria
 
     public function getRequestField() : string {
         return 'with';
+    }
+
+    protected function shouldApply($model, $repository): bool
+    {
+        return $repository->getMethod() != 'count';
     }
 
     abstract public function getFields() : array;

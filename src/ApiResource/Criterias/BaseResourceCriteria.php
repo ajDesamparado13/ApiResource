@@ -66,7 +66,15 @@ abstract class BaseResourceCriteria implements CriteriaInterface
      */
     public function apply($model, RepositoryInterface $repository)
     {
+        if(!$this->shouldApply($model,$repository)){
+            return $model;
+        }
         return $this->handle($model);
+    }
+
+    protected function shouldApply($model,$repository) : bool
+    {
+        return true;
     }
 
     protected function shouldSkipField($field,$value) : bool

@@ -39,6 +39,11 @@ abstract class OrderByCriteria extends BaseResourceCriteria
         return $query;
     }
 
+    protected function shouldApply($model, $repository): bool
+    {
+        return $repository->getMethod() != 'count';
+    }
+
     protected function shouldOrderByDefault() : bool
     {
         return true;
