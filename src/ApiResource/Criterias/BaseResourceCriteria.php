@@ -6,7 +6,7 @@ use Prettus\Repository\Contracts\CriteriaInterface;
 use Prettus\Repository\Contracts\RepositoryInterface;
 use Illuminate\Support\Arr;
 
-abstract class BaseResourceCriteria implements CriteriaInterface 
+abstract class BaseResourceCriteria implements CriteriaInterface
 {
     protected $inputs;
 
@@ -16,7 +16,7 @@ abstract class BaseResourceCriteria implements CriteriaInterface
     {
         $this->inputs = $inputs;
     }
-    
+
     public function setInputs(array $inputs){
         $this->inputs = $inputs;
         return $this;
@@ -34,9 +34,6 @@ abstract class BaseResourceCriteria implements CriteriaInterface
     }
 
     public function makeMapping(array $fields=[]) : array {
-        if(! $this->shouldCreateMapping()){
-            return $fields;
-        }
         $mapping = [];
         foreach($fields as $field => $value){
             $key = !is_numeric($field) ? $field : ( is_array($value) ? Arr::get($value,'column',$field) : $value ) ;
@@ -46,10 +43,15 @@ abstract class BaseResourceCriteria implements CriteriaInterface
     }
 
     protected function filterInputs( array $inputs ) : array {
+        if(!$this->shouldFilterInputs()){
+            return $inputs;
+        }
+
         $keys = $this->getKeys();
         if(Arr::first($keys) === '*'){
             return $inputs;
         }
+
         return Arr::where($inputs,function($value,$key) use ($keys){
             $find = !is_numeric($key) ? $key : $value;
             return in_array($find,$keys);
@@ -86,13 +88,17 @@ abstract class BaseResourceCriteria implements CriteriaInterface
         return true;
     }
 
+    protected function shouldFilterInputs() : bool{
+        return true;
+    }
+
     protected function shouldSkipCriteria( array $inputs){
         return empty($inputs);
     }
 
 
     public function getMapping() : array {
-        return $this->makeMapping($this->getFields());
+        return !$this->shouldCreateMapping() ? $this->getFields() :$this->makeMapping($this->getFields());
     }
 
     public function getKeys() : array {

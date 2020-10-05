@@ -23,6 +23,10 @@ abstract class PipelineCriteria extends BaseResourceCriteria
         return '';
     }
 
+    protected function shouldFilterInputs() : bool{
+        return false;
+    }
+
     public function handle($model){
         $inputs = $this->makeInputs();
         if($this->shouldSkipCriteria($inputs)){
@@ -36,8 +40,8 @@ abstract class PipelineCriteria extends BaseResourceCriteria
     }
 
     protected function buildQuery($query,array $criterias,array $inputs){
-        foreach($criterias as $criteria){
-            $criteria = $this->makeCriteria($criteria,$inputs);
+        foreach($criterias as $value ){
+            $criteria = $this->makeCriteria($value,$inputs);
             $query = $this->specialQuery($query,$criteria,$inputs);
         }
         return $query;
