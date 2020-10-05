@@ -34,6 +34,9 @@ abstract class BaseResourceCriteria implements CriteriaInterface
     }
 
     public function makeMapping(array $fields=[]) : array {
+        if(! $this->shouldCreateMapping()){
+            return $fields;
+        }
         $mapping = [];
         foreach($fields as $field => $value){
             $key = !is_numeric($field) ? $field : ( is_array($value) ? Arr::get($value,'column',$field) : $value ) ;
@@ -71,13 +74,19 @@ abstract class BaseResourceCriteria implements CriteriaInterface
         return in_array($field,$this->skipOn);
     }
 
+    protected function shouldCreateMapping() : bool {
+        return true;
+    }
+
     protected function shouldSkipCriteria( array $inputs){
         return empty($inputs);
     }
 
+
     public function getMapping() : array {
         return $this->makeMapping($this->getFields());
     }
+
     public function getKeys() : array {
         return array_keys($this->getMapping());
     }
