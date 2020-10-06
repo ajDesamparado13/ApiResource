@@ -17,7 +17,7 @@ trait HasTransformer {
         $transformer = $this->transformer();
 
         if(is_string($transformer)){
-            $transformer = app()->make($this->transformer);
+            $transformer = app()->make($transformer);
         }
 
         if (!( $transformer instanceof JsonResourceInterface) ) {

@@ -15,7 +15,7 @@ abstract class ApiController extends BaseController
     use \Freedom\ApiResource\Traits\HasResource;
     use \Freedom\ApiResource\Traits\HasTransformer;
     use \Freedom\ApiResource\Traits\HasMetaProvider;
-    use \Freedom\ApiResource\Traits\hasValidator;
+    use \Freedom\ApiResource\Traits\HasValidator;
 
 
 
@@ -37,7 +37,9 @@ abstract class ApiController extends BaseController
 
     abstract public function transformer();
 
-    abstract public function validator();
+    public function validator(){
+        return null;
+    }
 
     public function metaProvider(){
         return null;
@@ -53,6 +55,7 @@ abstract class ApiController extends BaseController
         $this->makeTransformer();
         $this->makeMetaProvider();
         $this->makeSanitizer();
+        $this->makeValidator();
         $this->request = $request;
         $this->boot();
     }

@@ -16,6 +16,10 @@ trait hasValidator {
     public function makeValidator(){
         $validator = $this->validator();
 
+        if(empty($validator)){
+            return;
+        }
+
         if(is_string($validator)){
             $validator = app()->make($validator);
         }

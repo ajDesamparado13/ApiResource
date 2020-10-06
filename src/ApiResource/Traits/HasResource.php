@@ -18,7 +18,7 @@ trait HasResource {
         $resource = $this->resource();
 
         if(is_string($resource)){
-            $resource = app()->make($this->resource());
+            $resource = app()->make($resource);
         }
 
         if (!( $resource instanceof ApiResourceInterface) ) {
