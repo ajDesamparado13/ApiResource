@@ -41,6 +41,6 @@ trait hasValidator {
         $this->validator->with($inputs)->passesOrFail($rule);
     }
 
-    protected abstract function validator();
+    public abstract function validator();
 }
 

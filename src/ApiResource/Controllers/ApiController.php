@@ -37,6 +37,8 @@ abstract class ApiController extends BaseController
 
     abstract public function transformer();
 
+    abstract public function validator();
+
     public function metaProvider(){
         return null;
     }
