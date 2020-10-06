@@ -91,10 +91,6 @@ trait RangeSearch{
     * returns Illuminate\Database\Query\Builder
     */
     public function fromHaving($model,$field,$value, $raw=false){
-        if($field instanceof \Illuminate\Database\Query\Expression){
-            return $model->havingRaw($field);
-        }
-
         $value = $this->getNumberOnly( $value );
         $rounded = floor($value);
 
