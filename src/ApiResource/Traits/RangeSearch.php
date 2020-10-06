@@ -91,14 +91,18 @@ trait RangeSearch{
     * returns Illuminate\Database\Query\Builder
     */
     public function fromHaving($model,$field,$value, $raw=false){
+        if($field instanceof \Illuminate\Database\Query\Expression){
+            return $model->havingRaw($field);
+        }
+
         $value = $this->getNumberOnly( $value );
         $rounded = floor($value);
 
         $value = $value != $rounded ?  $value : $rounded;
-        if($raw && !is_array($value)){
-            $value = [$value];
+        if($raw){
+            return $model->havingRaw( \DB::raw("{$field} >= {$value}"));
         }
-        return $raw ? $model->havingRaw($field.' >= ?',$value) : $model->having($field,'>=',$value);
+        return $model->having($field,'>=',$value);
     }
 
     public function fromHavingRaw($model,$field,$value){
@@ -122,6 +126,11 @@ trait RangeSearch{
             $up = (float)(str_pad("0.",strlen($decimals),"0",STR_PAD_RIGHT)."1");
             return $model->having($field,'<',$value+$up);
         }
+
+        if($raw){
+            return $model->havingRaw( \DB::raw("{$field} <= {$value}"));
+        }
+
         return $model->having($field,'<=',$rounded);
         /*
          * if value is greater than 0 add 1
@@ -133,5 +142,8 @@ trait RangeSearch{
         return $model->having($field,'<',$rounded+$up);
     }
 
+    public function toHavingRaw($model,$field,$value,$options=[]){
+        return $this->toHaving($model,$field,$value,$options,true);
+    }
 
 }
