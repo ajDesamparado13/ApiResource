@@ -83,7 +83,7 @@ trait FullTextSearch
 
     protected function exactSearch($term)
     {
-        return $this->enclosed_in_dquotes($term);
+        return $this->enclosed_in_quotes($this->enclosed_in_dquotes($term));
     }
 
     protected function AND($word)
