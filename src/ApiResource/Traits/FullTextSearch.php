@@ -60,7 +60,7 @@ trait FullTextSearch
 
         return implode(' ', array_map(function($group){
             $terms = array_filter(explode(' ', $group));
-            return $this->enclosed_in_parenthesis($this->makeAgainstWords($terms));
+            return $this->enclosed_in_parenthesis($this->makeAgainstWords($terms),"or");
         },$expressions));
     }
 
@@ -70,17 +70,14 @@ trait FullTextSearch
         if (count($words) == 1) {
             return $this->enclosed_in_dquotes($term);
         }
-        return $this->makeAgainstWords($words);
+        return $this->enclosed_in_quotes($this->makeAgainstWords($words));
     }
 
-    protected function makeAgainstWords(array $terms)
+    protected function makeAgainstWords(array $terms,$operator="AND")
     {
-        usort($terms,function($a,$b){
-            return strlen($b) <=> strlen($a);
-        });
-
-        return implode(' ' ,array_map(function($word){
-            return strlen($word) > 3 ? $this->AND($word) : $this->enclosed_in_quotes($word);
+        return implode(' ' ,array_map(function($word) use($operator){
+            $length_check = strtolower($operator) == 'or' ? strlen($word) >= 3  : strlen($word) > 3;
+            return $length_check ? $this->AND($word) : $word;
         },$terms));
     }
 
@@ -101,7 +98,7 @@ trait FullTextSearch
 
     protected function enclosed_in_dquotes($word)
     {
-        return "'\\\"" . trim($word) . "\\\"'";
+        return "\\\"" . trim($word) . "\\\"";
     }
 
     protected function enclosed_in_quotes($word)
@@ -111,7 +108,7 @@ trait FullTextSearch
 
     protected function enclosed_in_parenthesis($term)
     {
-        return "(" . $term . ")";
+        return "'(" . str_replace("'",'',$term) . ")'";
     }
 
     /*
