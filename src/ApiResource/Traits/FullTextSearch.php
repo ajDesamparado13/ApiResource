@@ -68,7 +68,7 @@ trait FullTextSearch
     {
         $words = array_filter(explode(' ', $term));
         if (count($words) == 1) {
-            return $this->enclosed_in_dquotes($term);
+            return $this->enclosed_in_quotes($this->enclosed_in_dquotes($term));
         }
         return $this->enclosed_in_quotes($this->makeAgainstWords($words));
     }
