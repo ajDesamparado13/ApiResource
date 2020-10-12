@@ -26,14 +26,15 @@ abstract class WithCriteria extends BaseResourceCriteria
     }
 
     protected function buildQuery($query,array $inputs){
-        foreach($inputs as $index => $field){
-            if($this->shouldSkipField($field,$field)){
+        foreach($inputs as $index => $key){
+            $field = is_numeric($index) ? $key : $index;
+            if($this->shouldSkipField($key,$field)){
                 continue;
             }
             $result = $this->specialQuery($query,$field);
             $query = $result ??  $query->with($field);
         }
-        $query;
+        return $query;
     }
 
     public function getRequestField() : string {
