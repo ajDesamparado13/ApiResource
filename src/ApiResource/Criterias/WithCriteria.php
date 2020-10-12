@@ -28,7 +28,7 @@ abstract class WithCriteria extends BaseResourceCriteria
     protected function buildQuery($query,array $inputs){
         foreach($inputs as $index => $key){
             $field = is_numeric($index) ? $key : $index;
-            if($this->shouldSkipField($key,$field)){
+            if($this->shouldSkipField($field,$key)){
                 continue;
             }
             $result = $this->specialQuery($query,$field);
