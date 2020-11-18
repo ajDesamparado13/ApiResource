@@ -55,7 +55,7 @@ class RequestCriteriaParser
     */
     public static function parseRequest(Request $request,$key = 'search')
     {
-        $fields = [ 'search','meta','filter','orderBy','with'];
+        $fields = [ 'search','meta','filter','orderBy','with','has'];
         $values = array_filter(Arr::only($request->query(),$fields));
 
         foreach($values as $key => $value){
