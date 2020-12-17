@@ -43,6 +43,15 @@ trait HasTransformer {
         $this->transformer = $transformer;
     }
 
+    protected function getTransformer() {
+        return empty($this->transformer) ? $this->makeTransformer() : $this->transformer ;
+    }
+
+    protected function getTransformerColumns() { 
+        $transformer = $this->getTransformer();
+        return property_exists($transformer,'columns') ? $transformer->columns : ['*'];
+    }
+
     abstract public function transformer();
 }
 
