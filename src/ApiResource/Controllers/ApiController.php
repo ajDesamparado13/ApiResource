@@ -75,7 +75,7 @@ abstract class ApiController extends BaseController
 
     /*
     * API ENDPOINT METHOD FOR RETRIEVING DATA
-    * 
+    *
     * @return Illuminate\Http\Resources\Json\JsonResource
     * @return \Illuminate\Http\Resources\Json\PaginatedResourceResponse
     * @return Illuminate\Http\Resources\Json\ResourceCollection
@@ -87,7 +87,7 @@ abstract class ApiController extends BaseController
 
         $meta = $this->getMeta($this->resource,$result);
 
-        return response()->resource($result,$this->transformer,[ 'message' => $this->getMessage('index'), 'meta' => $meta ]);
+        return response()->resource($result,$this->getTransformer(),[ 'message' => $this->getMessage('index'), 'meta' => $meta ]);
     }
 
     /*
@@ -97,7 +97,6 @@ abstract class ApiController extends BaseController
     */
     protected function _indexCollection()
     {
-        $transformer = $this->transformer;
         $limit = (int)$this->request->query('limit',100);
         if($limit && $limit > 0){
             $this->resource->scopeQuery(function($query) use($limit){
@@ -105,7 +104,7 @@ abstract class ApiController extends BaseController
             });
         }
 
-        return $this->resource->get($transformer->columns);
+        return $this->resource->get($this->getTransformerColumns());
     }
 
     /*
@@ -115,9 +114,8 @@ abstract class ApiController extends BaseController
     */
     protected function _indexPaginate()
     {
-        $transformer = $this->transformer;
         $per_page = $this->request->input('per_page',null);
-        return $this->resource->paginate(is_numeric($per_page) ? (int)$per_page : null,$transformer->columns);
+        return $this->resource->paginate(is_numeric($per_page) ? (int)$per_page : null,$this->getTransformerColumns());
     }
 
     /*
@@ -130,7 +128,7 @@ abstract class ApiController extends BaseController
         if($this->hasFileUpload()){
             $this->_upload($result);
         }
-        return response()->resource($result,$this->transformer,[ 'message' => $this->getMessage('store')]);
+        return response()->resource($result,$this->getTransformer(),[ 'message' => $this->getMessage('store')]);
     }
 
     /*
@@ -162,7 +160,7 @@ abstract class ApiController extends BaseController
     public function show($id)
     {
         $key = $this->request->input('primaryKey','id');
-        return response()->resource($this->_show($id,$key),$this->transformer, [ 'message' => $this->getMessage('show')]);
+        return response()->resource($this->_show($id,$key),$this->getTransformer(), [ 'message' => $this->getMessage('show')]);
     }
 
     /*
@@ -196,7 +194,7 @@ abstract class ApiController extends BaseController
         if($this->hasFileUpload()){
             $this->_upload($result);
         }
-        return response()->resource($result,$this->transformer,[ 'message' => $this->getMessage('update')]);
+        return response()->resource($result,$this->getTransformer(),[ 'message' => $this->getMessage('update')]);
     }
 
     /*
@@ -225,7 +223,11 @@ abstract class ApiController extends BaseController
      */
     public function destroy($id)
     {
-        return response()->json(['data' => $this->_destroy($id), 'message' => $this->getMessage('destroy')], 200);
+        $result = $this->_destroy($id);
+        if($result <= 0){
+            return response()->json(['data' => $result , 'message' => $this->getMessage('destroy')], 204);
+        }
+        return response()->json(['data' => $result , 'message' => $this->getMessage('destroy')], 200);
     }
 
     /*
@@ -236,7 +238,7 @@ abstract class ApiController extends BaseController
     */
     protected function _destroy($id)
     {
-        $ids = explode(',', $id);
+        $ids = is_array($id) ? $id : explode(',', $id);
         foreach ($ids as $id) {
             $this->resource->delete($id);
         }
@@ -250,17 +252,17 @@ abstract class ApiController extends BaseController
     public function upload()
     {
         if(!$this->hasFileUpload()){
-            return response()->json(['data' => 0, 'message' => 'No file uploaded'],201);
+            return response()->json(['data' => 0, 'message' => 'No file uploaded'],204);
         }
         $result = $this->_upload($this->resource->find($this->request->input('id')));
-        return response()->resource($result,$this->transformer,[
+        return response()->resource($result,$this->getTransformer(),[
             'message' => $this->getMessage('upload'),
         ]);
     }
 
     /*
     * PERFORMS A FILE UPLOADS
-    * 
+    *
     * @return \Illuminate\Database\Eloquent\Model
     */
     protected function _upload(Model $model)
@@ -288,6 +290,26 @@ abstract class ApiController extends BaseController
     protected function hasFileUpload()
     {
         return method_exists($this->resource,'upload');
+    }
+
+    public function __invoke(...$args)
+    {
+        $action = request()->query('actionName',null);
+
+        if(!empty($action) && method_exists($this,$action)){
+            return call_user_func_array(array($this,$action),$args);
+        }
+
+        $method = request()->method();
+        switch(true){
+            case ($method === 'DELETE'): $action = 'destroy'; break;
+            case ($method === 'GET' && !empty($args)): $action = 'show'; break;
+            case ($method === 'PUT'): $action = 'update'; break;
+            case ($method === 'POST'): $action = 'store'; break;
+            default: $action = 'index';
+        }
+
+        return call_user_func_array(array($this,$action),$args);
     }
 
 }
