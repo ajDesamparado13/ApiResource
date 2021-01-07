@@ -5,41 +5,62 @@ use Freedom\ApiResource\Parsers\RequestCriteriaParser;
 use Prettus\Repository\Contracts\CriteriaInterface;
 use Prettus\Repository\Contracts\RepositoryInterface;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 abstract class BaseResourceCriteria implements CriteriaInterface
 {
-    protected $inputs;
 
     protected $skipOn = [];
 
+    protected $inputs = [];
+
+    protected $mapping = [];
+
     public function __construct(array $inputs=[])
     {
-        $this->inputs = $inputs;
+        $this->setInputs($inputs);
     }
+
+    abstract public function getFields() : array;
+
+    abstract public function getRequestField() : string;
+
+    abstract public function handle($model);
 
     public function setInputs(array $inputs){
         $this->inputs = $inputs;
         return $this;
     }
 
-    public function getInputs(){
-        return $this->inputs;
+    /**
+     * Apply criteria in query repository
+     *
+     * @param string              $model
+     * @param RepositoryInterface $repository
+     *
+     * @return mixed
+     */
+    public function apply($model, RepositoryInterface $repository)
+    {
+        if(!$this->shouldApply($model,$repository)){
+            return $model;
+        }
+        $this->makeMapping();
+        $this->makeInputs();
+        return $this->handle($model);
+    }
+
+    protected function shouldApply($model,$repository) : bool
+    {
+        return true;
     }
 
     protected function makeInputs()
     {
         $field = $this->getRequestField();
-        $input = empty($this->inputs) ? (empty($field) ? request()->all() : request()->input($field,[]) ) : $this->inputs;
-        return $this->filterInputs(RequestCriteriaParser::parseField($input,$field));
-    }
-
-    public function makeMapping(array $fields=[]) : array {
-        $mapping = [];
-        foreach($fields as $field => $value){
-            $key = !is_numeric($field) ? $field : ( is_array($value) ? Arr::get($value,'column',$field) : $value ) ;
-            $mapping[$key] = $value;
-        }
-        return $mapping;
+        $inputs = empty($this->inputs) ? (empty($field) ? request()->all() : request()->input($field,[]) ) : $this->inputs;
+        $this->setInputs($this->filterInputs(RequestCriteriaParser::parseField($inputs,$field)));
+        return $this->inputs;
     }
 
     protected function filterInputs( array $inputs ) : array {
@@ -58,56 +79,94 @@ abstract class BaseResourceCriteria implements CriteriaInterface
         });
     }
 
-    /**
-     * Apply criteria in query repository
-     *
-     * @param string              $model
-     * @param RepositoryInterface $repository
-     *
-     * @return mixed
-     */
-    public function apply($model, RepositoryInterface $repository)
-    {
-        if(!$this->shouldApply($model,$repository)){
-            return $model;
+    public function getKeys() : array {
+        if(empty($this->mapping)){
+            $this->makeMapping();
         }
-        return $this->handle($model);
-    }
-
-    protected function shouldApply($model,$repository) : bool
-    {
-        return true;
-    }
-
-    protected function shouldSkipField($field,$value) : bool
-    {
-        return in_array($field,$this->skipOn);
-    }
-
-    protected function shouldCreateMapping() : bool {
-        return true;
+        return array_keys($this->getMapping());
     }
 
     protected function shouldFilterInputs() : bool{
         return true;
     }
 
-    protected function shouldSkipCriteria( array $inputs){
-        return empty($inputs);
+    public function makeMapping() : array {
+        $this->mapping = [];
+        if(!$this->shouldCreateMapping() ){
+            return $this->mapping = $this->getFields();
+        }
+        foreach($this->getFields() as $field => $value){
+            $key = !is_numeric($field) ? $field : ( is_array($value) ? Arr::get($value,'column',$field) : $value ) ;
+            $this->mapping[$key] = $value;
+        }
+        return $this->mapping;
     }
 
+
+    protected function shouldCreateMapping() : bool {
+        return true;
+    }
+
+    public function setMapping(array $mapping){
+        $this->mapping = $mapping;
+        return $this;
+    }
+
+    public function getInputs(){
+        return $this->inputs;
+    }
+
+    public function getColumn(string $field, string $table=""){
+        $map = Arr::get($this->mapping,$field);
+
+        if(empty($map)){
+            return null;
+        }
+
+        $column =  is_array($map) ? Arr::get($map,'column',$map) : $map;
+
+        if(empty($table)){
+            return $column;
+        }
+
+        if(is_array($column)){
+            return array_map(function($col) use($table){
+                return $table.'.'.$col;
+            },$column);
+        }
+
+        return $table.'.'.$column;
+    }
+
+    public function getValue(string $field){
+        return Arr::get($this->inputs,$field);
+    }
+
+    protected function shouldSkipField($field,$value) : bool {
+        return in_array($field,$this->skipOn);
+    }
+
+    protected function shouldSkipCriteria() : bool{
+        return empty($this->inputs);
+    }
 
     public function getMapping() : array {
-        return !$this->shouldCreateMapping() ? $this->getFields() :$this->makeMapping($this->getFields());
+        return $this->mapping;
     }
 
-    public function getKeys() : array {
-        return array_keys($this->getMapping());
+    public function __call(string $name, array $args)
+    {
+        if(empty($name)){
+            return;
+        }
+
+        if(method_exists($this,$name)){
+            return call_user_func_array(array($this,$name),$args);
+        }
+
+        $queryMethod = "query" . Str::ucfirst(Str::camel($name));
+        $name = method_exists($this,$queryMethod) ? $queryMethod : 'buildDefaultQuery';
+        return call_user_func_array(array($this,$name),$args);
     }
 
-    abstract public function getFields() : array;
-
-    abstract public function getRequestField() : string;
-
-    abstract public function handle($model);
 }

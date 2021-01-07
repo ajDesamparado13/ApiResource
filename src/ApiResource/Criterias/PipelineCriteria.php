@@ -28,21 +28,20 @@ abstract class PipelineCriteria extends BaseResourceCriteria
     }
 
     public function handle($model){
-        $inputs = $this->makeInputs();
-        if($this->shouldSkipCriteria($inputs)){
+        if($this->shouldSkipCriteria()){
             return $model;
         }
-        return $this->newQuery($model,$inputs);
+        return $this->newQuery($model);
     }
 
-    protected function newQuery($model,array $inputs){
-        return $this->buildQuery($model,$this->getCriterias(),$inputs);
+    protected function newQuery($model){
+        return $this->buildQuery($model,$this->getCriterias());
     }
 
-    protected function buildQuery($query,array $criterias,array $inputs){
+    protected function buildQuery($query,array $criterias){
         foreach($criterias as $value ){
-            $criteria = $this->makeCriteria($value,$inputs);
-            $query = $this->specialQuery($query,$criteria,$inputs);
+            $criteria = $this->makeCriteria($value,$this->inputs);
+            $query = $this->specialQuery($query,$criteria,$this->inputs);
         }
         return $query;
     }
@@ -58,7 +57,7 @@ abstract class PipelineCriteria extends BaseResourceCriteria
         return $criteria;
     }
 
-    protected function specialQuery($query,$criteria,array $inputs){
+    protected function specialQuery($query,$criteria){
         return $criteria->handle($query);
     }
 

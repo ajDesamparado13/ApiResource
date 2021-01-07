@@ -9,30 +9,34 @@ namespace Freedom\ApiResource\Criterias;
  */
 abstract class HasCriteria extends BaseResourceCriteria
 {
+    abstract public function getFields() : array;
+
     public function handle($model)
     {
-        $inputs = $this->makeInputs();
-        if($this->shouldSkipCriteria($inputs)){
+        if($this->shouldSkipCriteria()){
             return $model;
         }
-        return $this->newQuery($model,$inputs);
+        return $this->newQuery($model);
     }
 
 
-    protected function newQuery($model, array $inputs){
-        return $this->buildQuery($model,$inputs);
+    protected function newQuery($model){
+        return $this->buildQuery($model);
     }
 
-    protected function buildQuery($query,array $inputs){
-        foreach($inputs as $index => $key){
+    protected function buildQuery($query){
+        foreach($this->inputs as $index => $key){
             $field = is_numeric($index) ? $key : $index;
             if($this->shouldSkipField($field,$key)){
                 continue;
             }
-            $result = $this->specialQuery($query,$field);
-            $query = $result ??  $query->whereHas($field);
+            $query = $this->$field($query,$field);
         }
         return $query;
+    }
+
+    protected function buildDefaultQuery($query,$field){
+        return $query->whereHas($field);
     }
 
     public function getRequestField() : string {
@@ -44,7 +48,4 @@ abstract class HasCriteria extends BaseResourceCriteria
         return $repository->getMethod() != 'count';
     }
 
-    abstract public function getFields() : array;
-
-    abstract protected function specialQuery($query,$field);
 }

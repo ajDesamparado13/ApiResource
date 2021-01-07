@@ -11,32 +11,35 @@ use Illuminate\Support\Arr;
  */
 abstract class OrderByCriteria extends BaseResourceCriteria
 {
-    public function handle($model){
-        $inputs = $this->makeInputs();
+    abstract protected function defaultOrderBy($query);
 
-        if ($this->shouldSkipCriteria($inputs)) {
+    abstract public function getFields() : array;
+
+    public function handle($model){
+        if ($this->shouldSkipCriteria()) {
             return $this->shouldOrderByDefault() ? $this->defaultOrderBy($model) : $model;
         }
 
-        return $this->newQuery($model,$inputs);
+        return $this->newQuery($model);
     }
 
-    protected function newQuery($model,$orderBy){
-        return $this->buildQuery($model,$orderBy);
+    protected function newQuery($model){
+        return $this->buildQuery($model);
     }
 
-    protected function buildQuery($query,$orderBy){
-        $mapping = $this->makeMapping($this->getFields());
-        foreach($orderBy as $field => $value){
+    protected function buildQuery($query){
+        foreach($this->inputs as $field => $value){
             if($this->shouldSkipField($field,$value)){
                 continue;
             }
-
-            $column = $mapping[$field];
             $sortBy = $value ?? $this->defaultSortOperation();
-            $query = $this->specialQuery($query,$field,$column,$sortBy) ?? $query->orderBy($column,$sortBy);
+            $query = $this->$field($query,$field,$sortBy);
         }
         return $query;
+    }
+
+    protected function buildDefaultQuery($query,$field,$sortBy){
+        return $query->orderBy($this->getColumn($field),$sortBy);
     }
 
     protected function shouldApply($model, $repository): bool
@@ -59,10 +62,4 @@ abstract class OrderByCriteria extends BaseResourceCriteria
         return 'orderBy';
     }
 
-
-    abstract protected function specialQuery($query,$field,$column,$sortBy);
-
-    abstract protected function defaultOrderBy($query);
-
-    abstract public function getFields() : array;
 }
