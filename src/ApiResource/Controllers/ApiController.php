@@ -124,6 +124,10 @@ abstract class ApiController extends BaseController
     */
     public function store()
     {
+        if($this->isValidationRequest()){
+            return $this->validate();
+        }
+
         $result = $this->_store();
         if($this->hasFileUpload()){
             $this->_upload($result);
@@ -190,6 +194,10 @@ abstract class ApiController extends BaseController
      */
     public function update($id)
     {
+        if($this->isValidationRequest()){
+            return $this->validate();
+        }
+
         $result = $this->_update($id);
         if($this->hasFileUpload()){
             $this->_upload($result);
@@ -282,7 +290,7 @@ abstract class ApiController extends BaseController
         return count($with) > 0 ? $this->resource->with($with)->find($request->input('id')) : $model;
     }
 
-    protected function validate()
+    public function validate()
     {
         $inputs = $this->request->all();
         if($this->hasSanitizer()){
@@ -292,7 +300,17 @@ abstract class ApiController extends BaseController
         if ($this->hasValidator()) {
             $this->_validate($inputs, request()->method() === 'PUT' ? 'update' : 'create');
         }
+
+        if(!$this->isValidationRequest()){
+            return $inputs;
+        }
+
         return response()->json(['message' => 'Form is valid',200]);
+    }
+
+    protected function isValidationRequest() : bool
+    {
+        return  request()->query('_actionName',null) === 'validate';
     }
 
     /*
