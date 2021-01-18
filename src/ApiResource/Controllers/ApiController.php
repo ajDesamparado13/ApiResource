@@ -144,7 +144,7 @@ abstract class ApiController extends BaseController
         }
 
         if ($this->hasValidator()) {
-            $this->validate($inputs,'create');
+            $this->_validate($inputs,'create');
         }
 
         return $this->resource->create($inputs);
@@ -210,7 +210,7 @@ abstract class ApiController extends BaseController
             $inputs = $this->sanitize($inputs);
         }
         if ($this->hasValidator()) {
-            $this->validate($inputs,'update');
+            $this->_validate($inputs,'update');
         }
         return $this->resource->update($inputs,$id);
     }
@@ -282,6 +282,19 @@ abstract class ApiController extends BaseController
         return count($with) > 0 ? $this->resource->with($with)->find($request->input('id')) : $model;
     }
 
+    protected function validate()
+    {
+        $inputs = $this->request->all();
+        if($this->hasSanitizer()){
+            $inputs = $this->sanitize($inputs);
+        }
+
+        if ($this->hasValidator()) {
+            $this->_validate($inputs, request()->method() === 'PUT' ? 'update' : 'create');
+        }
+        return response()->json(['message' => 'Form is valid',200]);
+    }
+
     /*
     * CHECK IF CONTROLLER resource HAS UPLOAD METHOD
     *
@@ -294,7 +307,7 @@ abstract class ApiController extends BaseController
 
     public function __invoke(...$args)
     {
-        $action = request()->query('actionName',null);
+        $action = request()->query('_actionName',null);
 
         if(!empty($action) && method_exists($this,$action)){
             return call_user_func_array(array($this,$action),$args);

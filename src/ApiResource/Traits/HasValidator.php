@@ -40,7 +40,7 @@ trait hasValidator {
         return $this->validator = $this->makeValidator($validator);;
     }
 
-    protected function validate($inputs,$rule)
+    protected function _validate($inputs,$rule)
     {
         $this->validator->with($inputs)->passesOrFail($rule);
     }
