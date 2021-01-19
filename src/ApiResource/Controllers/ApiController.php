@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Freedom\ApiResource\VO\ApiMessage;
+use Illuminate\Support\Str;
 
 abstract class ApiController extends BaseController
 {
@@ -64,9 +65,12 @@ abstract class ApiController extends BaseController
         $this->setLang();
     }
 
-    public function setLang($controller="default",$file="api")
+    public function setLang($controller=null,$file="api")
     {
-        $this->messageObject = new ApiMessage($file,$controller);
+        if(!$controller){
+            $controller = Str::replaceLast('Controller','',class_basename($this));
+        }
+        $this->messageObject = new ApiMessage($file,Str::snake($controller));
     }
 
     protected function getMessage(string $method){
