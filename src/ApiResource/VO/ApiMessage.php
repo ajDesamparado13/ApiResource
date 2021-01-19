@@ -16,8 +16,13 @@ class ApiMessage {
 
     public function getMessage($method)
     {
-        $message = implode('.',array_filter([$this->file, $this->controller,$method ]));
-        return trans($message);
+        $path = implode('.',array_filter([$this->file, $this->controller,$method ]));
+        $message = trans($path);
+        if($message === $path){
+            return '';
+        }
+        return $message;
+
     }
 
 }
