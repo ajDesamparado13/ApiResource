@@ -301,8 +301,12 @@ abstract class ApiController extends BaseController
             $inputs = $this->sanitize($inputs);
         }
 
+        $type = request()->method() === 'PUT' ? 'update' : 'create';
+
         if ($this->hasValidator()) {
-            $this->_validate($inputs, request()->method() === 'PUT' ? 'update' : 'create');
+            $this->_validate($inputs, $type);
+        }else {
+            $this->resource->validate($inputs, $type);
         }
 
         if(!$this->isValidationRequest()){

@@ -5,6 +5,14 @@ namespace Freedom\ApiResource\Contracts;
 interface ApiResourceInterface{
 
     /**
+     * Specify Model class name
+     *
+     * @return string
+     */
+    public function model();
+
+
+    /**
      * Alias of All method
      *
      * @param array $columns
@@ -126,5 +134,35 @@ interface ApiResourceInterface{
      * @return $this
      */
     public function resetCriteria();
+
+    /**
+     * Create New Instance of Model
+     * 
+     * @param array $attributes
+     *
+     * @return Model
+     */
+    public function newInstance(array $attributes);
+
+    /**
+     * Validate attributes
+     * 
+     * @param array $attributes
+     * @param array $type
+     *
+     * @throws ValidatorException
+     * 
+     * @return bool
+     */
+    public function validate(array $attributes,string $type);
+
+    /**
+     * Filter attributes into model fillable attributes
+     * 
+     * @param array $attributes
+     *
+     * @return $array
+     */
+    public function fillableAttributes(array $attributes) : array;
 
 }
