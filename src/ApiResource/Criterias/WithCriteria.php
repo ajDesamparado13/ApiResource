@@ -9,9 +9,11 @@ use Illuminate\Support\Arr;
  *
  * @package namespace App\Criteria;
  */
-abstract class WithCriteria extends BaseResourceCriteria
+class WithCriteria extends BaseResourceCriteria
 {
-    abstract public function getFields() : array;
+    public function getFields() : array {
+        return ['*'];
+    }
 
     public function handle($model)
     {

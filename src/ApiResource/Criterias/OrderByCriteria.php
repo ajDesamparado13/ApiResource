@@ -9,11 +9,15 @@ use Illuminate\Support\Arr;
  *
  * @package namespace App\Criteria;
  */
-abstract class OrderByCriteria extends BaseResourceCriteria
+class OrderByCriteria extends BaseResourceCriteria
 {
-    abstract protected function defaultOrderBy($query);
+    protected function defaultOrderBy($query) {
+        return $query;
+    }
 
-    abstract public function getFields() : array;
+    public function getFields() : array {
+        return ['*'];
+    }
 
     public function handle($model){
         if ($this->shouldSkipCriteria()) {

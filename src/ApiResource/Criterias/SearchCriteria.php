@@ -9,9 +9,11 @@ use Freedom\ApiResource\Contracts\SearchablesInterface;
  *
  * @package namespace App\Criteria;
  */
-abstract class  SearchCriteria extends BaseResourceCriteria
+class  SearchCriteria extends BaseResourceCriteria
 {
-    abstract public function getFields() : array;
+    public function getFields() : array {
+        return ['*'];
+    }
 
     public function handle($model)
     {

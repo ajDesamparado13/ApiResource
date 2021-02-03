@@ -7,9 +7,11 @@ namespace Freedom\ApiResource\Criterias;
  *
  * @package namespace App\Criteria;
  */
-abstract class HasCriteria extends BaseResourceCriteria
+class HasCriteria extends BaseResourceCriteria
 {
-    abstract public function getFields() : array;
+    public function getFields() : array {
+        return ['*'];
+    }
 
     public function handle($model)
     {
