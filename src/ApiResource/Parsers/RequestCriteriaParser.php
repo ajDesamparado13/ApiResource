@@ -81,19 +81,23 @@ class RequestCriteriaParser
             case 'search':
                 return self::parseSearchData($value);
             break;
+            case 'field':
+                return self::parseByCommaData($value);
+            break;
         }
 
         return array_filter(explode(';',$value));
+    }
+
+    public static function parseByCommaData(string $values) : array 
+    {
+        return !$values ? [] : array_filter(explode(',',$values));
     }
 
     public static function parseOrderByData(string $orderBy) : array
     {
         if(!$orderBy){
             return [];
-        }
-
-        if(is_array($orderBy)){
-            return $orderBy;
         }
 
         $orderByData = [];
@@ -120,13 +124,8 @@ class RequestCriteriaParser
     */
     public static function parseSearchData(string $search) : array
     {
-        if(!$search){
-            return [];
-        }
+        if(!$search) return [];
 
-        if(is_array($search)){
-            return $search;
-        }
         $searchData = [];
 
         if (stripos($search, ':')) {
@@ -147,7 +146,6 @@ class RequestCriteriaParser
 
 
     /* TODO:
-    * Parse Request fields
     * Parse Request with
     * Parse request join
     * Parse Request filter
