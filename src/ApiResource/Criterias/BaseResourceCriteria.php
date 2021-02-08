@@ -120,7 +120,7 @@ abstract class BaseResourceCriteria implements CriteriaInterface
         $map = Arr::get($this->mapping,$field);
 
         if(empty($map)){
-            return null;
+            return $field;
         }
 
         $column =  is_array($map) ? Arr::get($map,'column',$map) : $map;
