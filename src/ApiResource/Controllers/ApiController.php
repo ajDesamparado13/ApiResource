@@ -57,6 +57,7 @@ abstract class ApiController extends BaseController
         $this->makeMetaProvider();
         $this->makeSanitizer();
         $this->makeValidator();
+        $this->registerEvents();
         $this->request = $request;
         $this->boot();
     }
@@ -329,6 +330,27 @@ abstract class ApiController extends BaseController
     protected function hasFileUpload()
     {
         return method_exists($this->resource,'upload');
+    }
+
+    public function registerEvents(){
+        foreach($this->listen() as $event => $listeners){
+            foreach($listeners as $listener){
+                \Event::listen($event,$listener);
+            }
+        }
+        foreach ($this->subscribe() as $subscriber) {
+            \Event::subscribe($subscriber);
+        }
+    }
+
+    protected function listen() : array
+    {
+        return [];
+
+    }
+
+    protected function subscribe() : array {
+        return [];
     }
 
     public function __invoke(...$args)
